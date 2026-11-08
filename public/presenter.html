@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quiz IA · Animateur</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --display: 'Bricolage Grotesque', 'Instrument Sans', system-ui, sans-serif; --body: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --bg: #f6f3ec; --ink: #17161a; --muted: #6b6760; --card: #fffdf8; --line: #e3ddd0;
+    --accent: #2f4bff; --good: #138a4f;
+    --c0: #2f4bff; --c1: #ff6b35; --c2: #13a07a; --c3: #b04ad6;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body { background: var(--bg); color: var(--ink); font: 20px/1.4 var(--body); display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; }
+  .display { font-family: var(--display); letter-spacing: -.02em; }
+
+  header { display: flex; align-items: center; gap: 24px; padding: 20px 40px; }
+  .brand { font-weight: 800; font-size: 26px; }
+  .step { color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: 16px; }
+  .spacer { flex: 1; }
+  .people { font-weight: 600; color: var(--muted); }
+  .people b { color: var(--ink); font-size: 26px; font-family: var(--display); }
+  .mini-qr { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 15px; }
+  .mini-qr img { width: 84px; height: 84px; background: #fff; padding: 4px; border-radius: 8px; }
+  .mini-qr b { color: var(--ink); display: block; font-size: 17px; }
+
+  main { padding: 8px 40px 24px; overflow: auto; display: flex; flex-direction: column; }
+
+  /* Accueil */
+  .lobby { flex: 1; display: grid; grid-template-columns: 1.1fr 1fr; gap: 56px; align-items: center; max-width: 1200px; margin: 0 auto; width: 100%; }
+  .lobby h1 { font-size: clamp(44px, 6vw, 84px); line-height: 1; font-weight: 800; margin-bottom: 24px; }
+  .lobby p { font-size: 26px; color: var(--muted); }
+  .lobby .url { margin-top: 28px; font-size: 30px; font-weight: 600; color: var(--ink); word-break: break-all; }
+  .big-qr { background: #fff; border-radius: 28px; padding: 24px; box-shadow: 0 1px 0 var(--line), 0 20px 50px -30px rgba(0,0,0,.35); }
+  .big-qr img { width: 100%; display: block; }
+
+  /* Question */
+  h2 { font-size: clamp(32px, 3.6vw, 54px); line-height: 1.08; font-weight: 800; max-width: 1400px; margin-bottom: 28px; }
+  .texts { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+  .texts .mail { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px 26px; white-space: pre-line; font-size: 20px; }
+  .texts .mail b { display: block; font-family: var(--display); font-size: 22px; margin-bottom: 10px; }
+
+  .bars { display: grid; gap: 14px; }
+  .bar { display: grid; grid-template-columns: 52px 1fr; gap: 16px; align-items: center; }
+  .swatch { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; color: #fff; font: 800 24px var(--display); }
+  .track { position: relative; height: 64px; background: var(--card); border: 2px solid var(--line); border-radius: 16px; overflow: hidden; }
+  .fill { position: absolute; inset: 0 auto 0 0; width: 0; opacity: .2; transition: width .6s cubic-bezier(.2,.8,.2,1); }
+  .track .label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 22px; font-weight: 600; font-size: 24px; }
+  .track .pct { font-family: var(--display); font-weight: 800; font-size: 28px; }
+  .with-texts h2 { margin-bottom: 18px; }
+  .with-texts .texts { margin-bottom: 18px; gap: 18px; }
+  .with-texts .texts .mail { font-size: 17px; padding: 14px 20px; }
+  .with-texts .texts .mail b { font-size: 18px; margin-bottom: 4px; }
+  .with-texts .bars { grid-template-columns: 1fr 1fr; gap: 12px 18px; }
+  .with-texts .track { height: 56px; }
+  .with-texts .explain { margin-top: 18px; font-size: 22px; }
+  .bar.right .track { border-color: var(--good); border-width: 3px; }
+  .bar.right .pct::before { content: '✓ '; color: var(--good); }
+  .bar.dim { opacity: .45; }
+  .explain { margin-top: 26px; font-size: 26px; max-width: 1300px; padding: 20px 26px; border-left: 6px solid var(--good); background: var(--card); border-radius: 0 16px 16px 0; }
+
+  .counter { flex: 1; display: grid; place-items: center; text-align: center; }
+  .counter .n { font: 800 160px/1 var(--display); }
+  .counter p { color: var(--muted); font-size: 28px; }
+  .bars.hidden .fill, .bars.hidden .pct { visibility: hidden; }
+
+  .cloud { flex: 1; display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: 10px 28px; padding: 20px; }
+  .cloud span { font-family: var(--display); font-weight: 800; line-height: 1.1; }
+
+  /* Barre de contrôle */
+  footer { display: flex; align-items: center; gap: 10px; padding: 12px 40px; border-top: 1px solid var(--line); background: var(--card); font-size: 15px; transition: opacity .2s; }
+  footer.ghost { opacity: 0; } footer.ghost:hover { opacity: 1; }
+  footer button { font: 600 15px var(--body); padding: 10px 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; }
+  footer button.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  footer button:disabled { opacity: .4; cursor: default; }
+  footer .phase { color: var(--muted); margin-left: 8px; }
+  footer .keys { color: var(--muted); margin-left: auto; }
+  kbd { font: 600 12px ui-monospace, monospace; border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; background: var(--bg); }
+  .offline { position: fixed; top: 0; inset-inline: 0; background: #c2412d; color: #fff; text-align: center; padding: 6px; font-weight: 600; display: none; }
+</style>
+</head>
+<body>
+<div class="offline" id="offline">Connexion au serveur perdue, reconnexion…</div>
+<header>
+  <span class="brand display">Quiz IA</span>
+  <span class="step" id="step"></span>
+  <span class="spacer"></span>
+  <span class="people"><b id="people">0</b> connectés</span>
+  <span class="mini-qr" id="miniqr" hidden><img src="/qr.svg" alt="QR code pour rejoindre"><span>Rejoindre<b class="joinurl"></b></span></span>
+</header>
+<main id="main"></main>
+<footer id="controls">
+  <button id="prev">← Précédent</button>
+  <button id="primary" class="primary"></button>
+  <button id="next">Suivant →</button>
+  <button id="live">Afficher les votes en direct</button>
+  <span class="phase" id="phase"></span>
+  <span class="keys"><kbd>Espace</kbd> action · <kbd>←</kbd><kbd>→</kbd> navigation · <kbd>L</kbd> live · <kbd>H</kbd> masquer la barre · <kbd>F</kbd> plein écran · <kbd>⇧R</kbd> recommencer</span>
+</footer>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const COLORS = ['var(--c0)', 'var(--c1)', 'var(--c2)', 'var(--c3)'];
+  const LETTERS = 'ABCDEFGH';
+  const key = new URLSearchParams(location.search).get('key');
+  const socket = io({ auth: { key } });
+  const $ = (id) => document.getElementById(id);
+  let s = null, showLive = false, joinUrl = location.origin;
+
+  fetch('/join-url').then(r => r.json()).then(d => { joinUrl = d.url; render(); }).catch(() => {});
+  socket.on('connect', () => $('offline').style.display = 'none');
+  socket.on('disconnect', () => $('offline').style.display = 'block');
+  socket.on('presenter', (st) => { s = st; render(); });
+
+  const send = (a) => socket.emit('control', a);
+  $('prev').onclick = () => send('prev');
+  $('next').onclick = () => send('next');
+  $('primary').onclick = primaryAction;
+  $('live').onclick = () => { showLive = !showLive; render(); };
+
+  function primaryAction() {
+    if (!s) return;
+    if (s.index < 0) return send('next');
+    if (s.phase === 'open') return send('reveal');
+    if (s.phase === 'closed') return send('reveal');
+    if (s.phase === 'reveal') if (s.index < s.count - 1) send('next');
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT') return;
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); primaryAction(); }
+    else if (e.key === 'ArrowRight') send('next');
+    else if (e.key === 'ArrowLeft') send('prev');
+    else if (e.key.toLowerCase() === 'l') { showLive = !showLive; render(); }
+    else if (e.key.toLowerCase() === 'h') $('controls').classList.toggle('ghost');
+    else if (e.key === 'R' && e.shiftKey && confirm('Recommencer le quiz et effacer toutes les réponses ?')) send('restart');
+    else if (e.key.toLowerCase() === 'f') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
+  });
+
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  function render() {
+    if (!s) return;
+    const main = $('main'), q = s.question;
+    const shortUrl = joinUrl.replace(/^https?:\/\//, '');
+    document.querySelectorAll('.joinurl').forEach(n => n.textContent = shortUrl);
+    $('people').textContent = s.participants;
+    $('step').textContent = q ? `Question ${s.index + 1} / ${s.count}` : '';
+    $('miniqr').hidden = !q;
+    main.replaceChildren();
+    main.classList.toggle('with-texts', !!(q && q.texts));
+
+    // Contrôles
+    $('prev').disabled = s.index <= 0;
+    $('next').disabled = s.index >= s.count - 1;
+    $('live').textContent = showLive ? 'Masquer les votes en direct' : 'Afficher les votes en direct';
+    $('live').hidden = !q || q.type === 'text';
+    const p = $('primary');
+    if (!q) { p.textContent = 'Lancer le quiz'; $('phase').textContent = 'En attente des participants'; }
+    else if (s.phase === 'open') { p.textContent = 'Révéler les résultats'; $('phase').textContent = 'Votes ouverts'; }
+    else if (s.phase === 'reveal') {
+      p.textContent = s.index < s.count - 1 ? 'Question suivante' : 'Terminé';
+      p.disabled = s.index >= s.count - 1;
+      $('phase').textContent = 'Résultats affichés';
+    }
+    if (s.phase !== 'reveal') p.disabled = false;
+
+    if (!q) {
+      const l = el('section', 'lobby');
+      const left = el('div');
+      left.append(el('h1', 'display', 'Sortez vos téléphones !'), el('p', null, 'Scannez le QR code pour participer. Aucun compte, aucune appli.'), el('div', 'url', shortUrl));
+      const qr = el('div', 'big-qr'); const img = el('img'); img.src = '/qr.svg'; img.alt = 'QR code pour rejoindre'; qr.append(img);
+      l.append(left, qr); main.append(l); return;
+    }
+
+    main.append(el('h2', 'display', q.title));
+    if (q.texts) {
+      const t = el('div', 'texts');
+      q.texts.forEach(x => { const m = el('div', 'mail'); m.append(el('b', null, x.label), document.createTextNode(x.body)); t.append(m); });
+      main.append(t);
+    }
+
+    const r = s.results;
+    if (q.type === 'text') {
+      if (s.phase === 'reveal') {
+        const c = el('div', 'cloud');
+        const max = Math.max(1, ...r.words.map(w => w.count));
+        r.words.forEach((w, i) => {
+          const sp = el('span', null, w.word);
+          sp.style.fontSize = (26 + 64 * (w.count / max)) + 'px';
+          sp.style.color = COLORS[i % COLORS.length];
+          c.append(sp);
+        });
+        if (!r.words.length) c.append(el('p', null, 'Aucune réponse pour l’instant.'));
+        main.append(c);
+      } else main.append(counter(r.total));
+      return;
+    }
+
+    const revealed = s.phase === 'reveal';
+    if (!revealed && !showLive && !q.texts) { main.append(counter(r.total)); return; }
+
+    const bars = el('div', 'bars' + (!revealed && !showLive ? ' hidden' : ''));
+    const total = r.total || 0;
+    q.options.forEach((label, i) => {
+      const b = el('div', 'bar');
+      if (revealed && q.correct != null) b.classList.add(i === q.correct ? 'right' : 'dim');
+      const sw = el('div', 'swatch', LETTERS[i]); sw.style.background = COLORS[i % COLORS.length];
+      const track = el('div', 'track');
+      const fill = el('div', 'fill'); fill.style.background = COLORS[i % COLORS.length];
+      const pct = total ? Math.round(100 * r.counts[i] / total) : 0;
+      requestAnimationFrame(() => fill.style.width = pct + '%');
+      const lab = el('div', 'label'); lab.append(el('span', null, label), el('span', 'pct', `${pct} %`));
+      track.append(fill, lab); b.append(sw, track); bars.append(b);
+    });
+    main.append(bars);
+    if (!revealed) {
+      const n = el('p', null, `${total} réponse${total > 1 ? 's' : ''}`);
+      n.style.cssText = 'margin-top:18px;color:var(--muted);font-weight:600;font-size:24px';
+      main.append(n);
+    }
+    if (revealed && q.explanation) main.append(el('div', 'explain', q.explanation));
+  }
+
+  function counter(n) {
+    const c = el('div', 'counter'); const inner = el('div');
+    inner.append(el('div', 'n', String(n)), el('p', null, n > 1 ? 'réponses reçues' : 'réponse reçue'));
+    c.append(inner); return c;
+  }
+</script>
+</body>
+</html>
